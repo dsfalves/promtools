@@ -9,6 +9,12 @@ import (
 	"encoding/json"
 )
 
+func logErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 type Scrapper struct {
 	root string
 }
@@ -21,9 +27,7 @@ func NewScrapper(host string, port int) *Scrapper {
 func (s *Scrapper) Request(path string, v map[string]string) (*http.Response, error){
 	fullpath := fmt.Sprintf("%s/%s", s.root, path)
 	u, err := url.Parse(fullpath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	logErr(err)
 	if v != nil {
 		q := make(url.Values)
 		for k, m := range v {
@@ -39,9 +43,7 @@ func (s *Scrapper) Metrics() []string {
 	var out []string
 	res := make(map[string] interface{})
 	response, err := s.Request("label/__name__/values", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+	logErr(err)
 	defer response.Body.Close()
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&res)
@@ -70,9 +72,7 @@ func (s Scrapper) Measurements(metric string) {
 	v = make(map[string] string)
 	v["query"] = metric
 	response, err := s.Request("query", v)
-	if err != nil {
-		log.Fatal(err)
-	}
+	logErr(err)
 	fmt.Println(response)
 }
 
