@@ -18,11 +18,18 @@ func NewScrapper(host string, port int) *Scrapper {
 	return &Scrapper{root: root}
 }
 
-func (s *Scrapper) Request(path string) (*http.Response, error){
+func (s *Scrapper) Request(path string, v map[string]string) (*http.Response, error){
 	fullpath := fmt.Sprintf("%s/%s", s.root, path)
 	u, err := url.Parse(fullpath)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if v != nil {
+		q := make(url.Values)
+		for k, m := range v {
+			q.Add(k, m)
+		}
+		u.RawQuery = q.Encode()
 	}
 	response, err := http.Get(u.String())
 	return response, err
@@ -31,7 +38,7 @@ func (s *Scrapper) Request(path string) (*http.Response, error){
 func (s *Scrapper) Metrics() []string {
 	var out []string
 	res := make(map[string] interface{})
-	response, err := s.Request("label/__name__/values")
+	response, err := s.Request("label/__name__/values", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,11 +65,24 @@ func (s *Scrapper) Metrics() []string {
 	return out
 }
 
+func (s Scrapper) Measurements(metric string) {
+	var v map[string] string
+	v = make(map[string] string)
+	v["query"] = metric
+	response, err := s.Request("query", v)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(response)
+}
+
 func main() {
 	ip := "129.114.108.78"
 	port := 30900
 	scrapper := NewScrapper(ip, port)
-	for _, metric := range scrapper.Metrics() {
+	metrics := scrapper.Metrics()
+	for _, metric := range metrics {
 		fmt.Println(metric)
 	}
+	scrapper.Measurements(metrics[0])
 }
