@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"encoding/json"
 )
 
@@ -19,7 +20,11 @@ func NewScrapper(host string, port int) *Scrapper {
 
 func (s *Scrapper) Request(path string) (*http.Response, error){
 	fullpath := fmt.Sprintf("%s/%s", s.root, path)
-	response, err := http.Get(fullpath)
+	u, err := url.Parse(fullpath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	response, err := http.Get(u.String())
 	return response, err
 }
 
