@@ -15,6 +15,16 @@ func logErr(err error) {
 	}
 }
 
+func checkStatus(response map[string] interface{}) {
+	status, ok := response["status"].(string)
+	if !ok {
+		log.Fatal("Response missing status field: ", response)
+	}
+	if status != "success" {
+		log.Fatal("Received error: ", response["error"].(string))
+	}
+}
+
 type Scrapper struct {
 	root string
 }
@@ -47,9 +57,8 @@ func (s *Scrapper) Metrics() []string {
 	defer response.Body.Close()
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&res)
-	if err != nil || res["status"] != "success"{
-		log.Fatal(err)
-	}
+	logErr(err)
+	checkStatus(res)
 
 	switch v := res["data"].(type) {
 	case []interface{}:
@@ -79,9 +88,7 @@ func (s Scrapper) Measurements(metric string) {
 	data := make(map[string] interface{})
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&data)
-	if status := data["status"].(string); status != "success" {
-		fmt.Println(data["error"].(string))
-	}
+	checkStatus(data)
 	fmt.Println(response)
 }
 
