@@ -2,12 +2,36 @@
 package main
 
 import (
+	"os"
+	"flag"
+	"io/ioutil"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"encoding/json"
 )
+
+type TimePoint struct {
+	time float64
+	measurement string
+}
+
+type TimeSeries []TimePoint
+
+type Response struct {
+	metrics map[string] string
+	values TimeSeries
+}
+
+func Decode(raw map[string] interface{}) *Response {
+	response := Response{
+		metrics: make(map[string] string),
+	}
+	response.metrics = raw["metric"].(map[string] string)
+
+	return &response
+}
 
 func logErr(err error) {
 	if err != nil {
@@ -80,25 +104,37 @@ func (s Scrapper) Measurements(metric string) {
 	var v map[string] string
 	v = make(map[string] string)
 	v["query"] = metric + fmt.Sprintf("[%ds]", 60*60*24*7)
-	fmt.Println(v["query"])
 	response, err := s.Request("query", v)
 	logErr(err)
 	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	logErr(err)
+	ioutil.WriteFile(metric + ".json", body, 0644)
 
-	data := make(map[string] interface{})
+	/*data := make(map[string] interface{})
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&data)
+	logErr(err)
 	checkStatus(data)
-	fmt.Println(response)
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err = encoder.Encode(data["data"])
+	logErr(err)
+	fmt.Println(buf)*/
 }
 
 func main() {
-	ip := "129.114.108.78"
-	port := 30900
-	scrapper := NewScrapper(ip, port)
+	l := log.New(os.Stderr, "", 0)
+	ip := flag.String("address", "", "address for Prometheus") //"129.114.108.78"
+	port := flag.Int("port", 30900, "port for Prometheus")
+	flag.Parse()
+	if *ip == "" {
+		l.Fatal("The --address argument is required")
+	}
+	scrapper := NewScrapper(*ip, *port)
 	metrics := scrapper.Metrics()
 	for _, metric := range metrics {
 		fmt.Println(metric)
+		scrapper.Measurements(metric)
 	}
-	scrapper.Measurements(metrics[0])
 }
