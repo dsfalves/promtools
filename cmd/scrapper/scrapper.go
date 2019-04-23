@@ -103,7 +103,7 @@ func (s *Scrapper) Metrics() []string {
 func (s Scrapper) Measurements(metric string) {
 	var v map[string] string
 	v = make(map[string] string)
-	v["query"] = metric + fmt.Sprintf("[%ds]", 60*60*24*7)
+	v["query"] = metric + fmt.Sprintf("[%dh]", 24*7)
 	response, err := s.Request("query", v)
 	logErr(err)
 	defer response.Body.Close()
