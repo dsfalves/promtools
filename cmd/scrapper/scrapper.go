@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"encoding/json"
+	"github.com/dsfalves/promtools"
 )
 
 type TimePoint struct {
@@ -73,33 +73,6 @@ func (s *Scrapper) Request(path string, v map[string]string) (*http.Response, er
 	return response, err
 }
 
-func (s *Scrapper) Metrics() []string {
-	var out []string
-	res := make(map[string] interface{})
-	response, err := s.Request("label/__name__/values", nil)
-	logErr(err)
-	defer response.Body.Close()
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&res)
-	logErr(err)
-	checkStatus(res)
-
-	switch v := res["data"].(type) {
-	case []interface{}:
-		for _, m := range v {
-			switch name := m.(type) {
-			case string:
-				out = append(out, name)
-			default:
-				log.Fatal("Stranger element: ", name)
-			}
-		}
-	default:
-		log.Fatal("Data not a string: ", res["data"])
-	}
-	return out
-}
-
 func (s Scrapper) Measurements(metric string) {
 	var v map[string] string
 	v = make(map[string] string)
@@ -120,8 +93,12 @@ func main() {
 	if *ip == "" {
 		l.Fatal("The --address argument is required")
 	}
+	path := fmt.Sprintf("%s:%d", *ip, *port)
 	scrapper := NewScrapper(*ip, *port)
-	metrics := scrapper.Metrics()
+	metrics, err := promtools.MetricsRequest(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for _, metric := range metrics {
 		fmt.Println(metric)
 		scrapper.Measurements(metric)
