@@ -93,7 +93,7 @@ func main() {
 	if *ip == "" {
 		l.Fatal("The --address argument is required")
 	}
-	path := fmt.Sprintf("%s:%d", *ip, *port)
+	path := fmt.Sprintf("http://%s:%d", *ip, *port)
 	scrapper := NewScrapper(*ip, *port)
 	metrics, err := promtools.MetricsRequest(path)
 	if err != nil {

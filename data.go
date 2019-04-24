@@ -43,7 +43,7 @@ type MetricsResponse struct {
 
 func MetricsRequest(address string) ([]string, error) {
 	res := new(MetricsResponse)
-	fullpath := fmt.Sprintf("http://%s/api/v1/label/__name__/values", address)
+	fullpath := fmt.Sprintf("%s/api/v1/label/__name__/values", address)
 	u, err := url.Parse(fullpath)
 	if err != nil {
 		return nil, err
