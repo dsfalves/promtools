@@ -110,17 +110,6 @@ func (s Scrapper) Measurements(metric string) {
 	body, err := ioutil.ReadAll(response.Body)
 	logErr(err)
 	ioutil.WriteFile(metric + ".json", body, 0644)
-
-	/*data := make(map[string] interface{})
-	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&data)
-	logErr(err)
-	checkStatus(data)
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	err = encoder.Encode(data["data"])
-	logErr(err)
-	fmt.Println(buf)*/
 }
 
 func main() {
