@@ -13,8 +13,6 @@ type Entry struct {
 	Value string
 }
 
-type Series []Entry
-
 type SeriesResponse struct {
 	Status string
 	Data SeriesData
@@ -25,7 +23,7 @@ type SeriesResponse struct {
 
 type Measurements struct {
 	Metric map[string] string
-	Values Series
+	Values []Entry
 }
 
 type SeriesData struct {
